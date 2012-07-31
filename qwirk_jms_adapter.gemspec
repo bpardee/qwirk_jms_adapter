@@ -15,4 +15,6 @@ Gem::Specification.new do |s|
   # jruby-jms doensn't yet include this dependency
   s.add_dependency 'gene_pool', ['>= 1.2.0']
   s.add_dependency 'qwirk', '~> 0.1.0'
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'rdoc'
 end
