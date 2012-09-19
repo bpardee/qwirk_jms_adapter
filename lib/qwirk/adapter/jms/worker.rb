@@ -14,6 +14,9 @@ module Qwirk
 
         def receive_message
           @consumer.receive
+        rescue Exception => e
+          Qwirk.logger.warn "Error during receive: #{e.message}"
+          return nil
         end
 
         def acknowledge_message(msg)
@@ -27,7 +30,7 @@ module Qwirk
         def send_exception(original_message, e)
           @string_marshaler ||= MarshalStrategy.find(:string)
           do_send_response(@string_marshaler, original_message, "Exception: #{e.message}") do |reply_message|
-            reply_message['qwirk:exception'] = Qwirk::RemoteException.new(e).to_hash.to_yaml
+            reply_message['qwirk:exception'] = Qwirk::RemoteException.new(e).marshal
           end
         end
 
@@ -51,6 +54,10 @@ module Qwirk
           @consumer.close if @consumer
           @session.close if @session
           @stopped = true
+        end
+
+        def ready_to_stop?
+          true
         end
 
         private

@@ -17,7 +17,7 @@ module Qwirk
 
           def parse_response(message)
             if error_yaml = message['qwirk:exception']
-              return Qwirk::RemoteException.from_hash(YAML.load(error_yaml))
+              return Qwirk::RemoteException.unmarshal(error_yaml)
             end
             marshaler = Qwirk::MarshalStrategy.find(message['qwirk:marshal'] || WorkerConfig.default_marshal_sym)
             return marshaler.unmarshal(message.data)

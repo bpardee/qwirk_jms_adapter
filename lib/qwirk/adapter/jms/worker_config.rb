@@ -25,6 +25,12 @@ module Qwirk
         def create_worker
           Worker.new(self)
         end
+
+        def stop
+          Qwirk.logger.debug { "Stopping #{self}" }
+          @connection.close
+          super
+        end
       end
     end
   end

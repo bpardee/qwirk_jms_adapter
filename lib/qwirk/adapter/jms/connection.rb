@@ -11,10 +11,6 @@ module Qwirk
           @connection = ::JMS::Connection.new(config)
           @session_pool = @connection.create_session_pool(@config)
           @connection.start
-
-          at_exit do
-            close
-          end
         end
 
         # Create a session targeted for a consumer (producers should use the session_pool)
