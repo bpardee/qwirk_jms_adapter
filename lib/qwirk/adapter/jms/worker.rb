@@ -7,6 +7,7 @@ module Qwirk
           @worker_config = worker_config
           @name          = worker_config.name
           @marshaler     = worker_config.marshaler
+          @marshal_sym   = worker_config.marshal_sym
           @session       = worker_config.connection.create_session
           @consumer      = @session.consumer(worker_config.destination)
           @session.start
@@ -24,12 +25,12 @@ module Qwirk
         end
 
         def send_response(original_message, marshaled_object)
-          do_send_response(@marshaler, original_message, marshaled_object)
+          do_send_response(@marshal_sym, @marshaler, original_message, marshaled_object)
         end
 
         def send_exception(original_message, e)
           @string_marshaler ||= MarshalStrategy.find(:string)
-          do_send_response(@string_marshaler, original_message, "Exception: #{e.message}") do |reply_message|
+          do_send_response(:string, @string_marshaler, original_message, "Exception: #{e.message}") do |reply_message|
             reply_message['qwirk:exception'] = Qwirk::RemoteException.new(e).marshal
           end
         end
@@ -62,7 +63,7 @@ module Qwirk
 
         private
 
-        def do_send_response(marshaler, original_message, marshaled_object)
+        def do_send_response(marshal_sym, marshaler, original_message, marshaled_object)
           return false unless original_message.reply_to
           begin
             @session.producer(:destination => original_message.reply_to) do |producer|
@@ -78,7 +79,7 @@ module Qwirk
               producer.time_to_live = time_to_live.to_i if time_to_live
               reply_message = Util.create_message(@session, marshaled_object, marshaler.marshal_type)
               reply_message.jms_correlation_id = original_message.jms_message_id
-              reply_message['qwirk:marshal'] = marshaler.to_sym.to_s
+              reply_message['qwirk:marshal'] = marshal_sym.to_s
               reply_message['qwirk:worker']  = @name
               reply_message['QwirkTaskID']   = original_message['QwirkTaskID'] if original_message['QwirkTaskID']
               yield reply_message if block_given?
